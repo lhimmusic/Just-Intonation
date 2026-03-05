@@ -678,6 +678,12 @@ document.addEventListener('keydown', e => {
 </div>
 
 <!-- Keyboard visualization -->
+<div class="expl" id="explBox">
+  <strong>세 조율 시스템의 핵심 차이</strong><br>
+  <strong>평균율</strong>은 모든 반음을 <span class="mono">100¢</span>씩 균등 분할 — 어느 조성에서나 동일한 구조입니다.<br>
+  <strong>순정율</strong>은 <span class="mono">5/4, 3/2</span> 등 소수 정수비로 음을 정의합니다. 기준조에서 가장 깨끗하지만, 조옮김하면 비율이 깨집니다.<br>
+  <strong>피타고라스</strong>는 순5도(<span class="mono">3/2</span>)만 연속으로 쌓아 음계를 만듭니다. 완전5도는 완벽하지만 장3도가 순정율보다 약 22¢ 더 높아 거칩니다.
+</div>
 <div class="kb-section">
   <div class="kb-title">건반 일렬 배치 — 한 옥타브 내 각 음의 위치 (cent 기준)</div>
   <div class="kb-legend">
@@ -796,13 +802,6 @@ document.addEventListener('keydown', e => {
     <canvas id="cvP" width="300" height="48"></canvas>
     <div class="bval" id="bhP">—</div>
   </div>
-</div>
-
-<div class="expl" id="explBox">
-  <strong>세 조율 시스템의 핵심 차이</strong><br>
-  <strong>평균율</strong>은 모든 반음을 <span class="mono">100¢</span>씩 균등 분할 — 어느 조성에서나 동일한 구조입니다.<br>
-  <strong>순정율</strong>은 <span class="mono">5/4, 3/2</span> 등 소수 정수비로 음을 정의합니다. 기준조에서 가장 깨끗하지만, 조옮김하면 비율이 깨집니다.<br>
-  <strong>피타고라스</strong>는 순5도(<span class="mono">3/2</span>)만 연속으로 쌓아 음계를 만듭니다. 완전5도는 완벽하지만 장3도가 순정율보다 약 22¢ 더 높아 거칩니다.
 </div>
 
 <!-- Interval harmony tables -->
@@ -1003,7 +1002,7 @@ function drawKeyboard() {
   const svg = document.getElementById('kbSvg');
   svg.innerHTML = '';
   const VW=940, VH=170;
-  const LEFT=28, RIGHT=12;
+  const LEFT=48, RIGHT=12;
   const KBW = VW-LEFT-RIGHT;
   const KBY = 30, KBH = 72;
 
