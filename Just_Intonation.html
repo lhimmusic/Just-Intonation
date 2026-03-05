@@ -738,66 +738,100 @@ document.addEventListener('keydown',e=>{
 
 // ══ AUDIO ══
 let actx=null;
+let activeNodes=[];
+let allThreeTimer=null;
+
 function getAC(){if(!actx)actx=new(window.AudioContext||window.webkitAudioContext)();return actx;}
-function tone(freq,t0,dur,vol=0.15,pan=0){
+
+// 지속 재생 오실레이터 (정지할 때까지)
+function startTone(freq,vol=0.15,pan=0){
   const ac=getAC();
   const o=ac.createOscillator(),g=ac.createGain(),p=ac.createStereoPanner();
   o.type='sine'; o.frequency.value=freq;
-  g.gain.setValueAtTime(vol,t0);
-  g.gain.exponentialRampToValueAtTime(0.001,t0+dur);
+  g.gain.setValueAtTime(0,ac.currentTime);
+  g.gain.linearRampToValueAtTime(vol,ac.currentTime+0.05);
   p.pan.value=pan;
   o.connect(g);g.connect(p);p.connect(ac.destination);
-  o.start(t0);o.stop(t0+dur+0.1);
+  o.start();
+  activeNodes.push({o,g});
+  return {o,g};
 }
-function playChord(freqs,dur=2){
-  const ac=getAC(),now=ac.currentTime+0.05;
-  freqs.forEach(f=>tone(f,now,dur));
-}
-const C4=261.63;
-function playInterval(r1,r2,btn){
-  stopAllBtns();
-  if(btn){btn.classList.add('playing');btn.textContent='■ 정지';
-    setTimeout(()=>{btn.classList.remove('playing');btn.textContent=btn.dataset.orig||btn.textContent;},2200);}
-  const ac=getAC(),now=ac.currentTime+0.05;
-  tone(C4,now,2); tone(C4*r2/r1,now,2);
-}
-function playThird(sys,btn){
-  stopAllBtns();
-  const ratios={just:5/4,eq:Math.pow(2,4/12),pyth:81/64};
-  const r=ratios[sys];
-  if(btn){
-    if(!btn.dataset.orig)btn.dataset.orig=btn.textContent;
-    btn.classList.add('playing');btn.textContent='■ 정지';
-    setTimeout(()=>{btn.classList.remove('playing');btn.textContent=btn.dataset.orig;},2200);
-  }
-  const ac=getAC(),now=ac.currentTime+0.05;
-  tone(C4,now,2,0.15,-0.3); tone(C4*r,now,2,0.15,0.3);
-}
-function playJustChord(btn){
-  if(btn&&!btn.dataset.orig)btn.dataset.orig=btn.textContent;
-  stopAllBtns();
-  if(btn){btn.classList.add('playing');btn.textContent='■ 정지';
-    setTimeout(()=>{btn.classList.remove('playing');btn.textContent=btn.dataset.orig;},2500);}
-  const ac=getAC(),now=ac.currentTime+0.05;
-  [C4,C4*5/4,C4*3/2].forEach(f=>tone(f,now,2.2));
-}
-function playAllThree(btn){
-  if(btn&&!btn.dataset.orig)btn.dataset.orig=btn.textContent;
-  stopAllBtns();
-  if(btn){btn.classList.add('playing');btn.textContent='재생 중…';
-    setTimeout(()=>{btn.classList.remove('playing');btn.textContent=btn.dataset.orig;},7500);}
-  const ac=getAC(),now=ac.currentTime+0.05;
-  const thirds=[5/4, Math.pow(2,4/12), 81/64];
-  thirds.forEach((r,i)=>{
-    const t=now+i*2.5;
-    tone(C4,t,2); tone(C4*r,t,2);
+
+function stopAllSound(){
+  const ac=getAC();
+  activeNodes.forEach(({o,g})=>{
+    try{
+      g.gain.linearRampToValueAtTime(0,ac.currentTime+0.08);
+      o.stop(ac.currentTime+0.1);
+    }catch(e){}
   });
+  activeNodes=[];
+  if(allThreeTimer){clearTimeout(allThreeTimer);allThreeTimer=null;}
 }
+
 function stopAllBtns(){
+  stopAllSound();
   document.querySelectorAll('.play-btn.playing').forEach(b=>{
     b.classList.remove('playing');
     if(b.dataset.orig)b.textContent=b.dataset.orig;
   });
+}
+
+function toggleBtn(btn){
+  if(!btn.dataset.orig) btn.dataset.orig=btn.textContent;
+  if(btn.classList.contains('playing')){
+    stopAllBtns(); return false; // 정지
+  }
+  stopAllBtns();
+  btn.classList.add('playing'); btn.textContent='■ 정지';
+  return true; // 재생
+}
+
+const C4=261.63;
+
+function playInterval(r1,r2,btn){
+  if(!toggleBtn(btn)) return;
+  startTone(C4,0.15,-0.3);
+  startTone(C4*r2/r1,0.15,0.3);
+}
+
+function playThird(sys,btn){
+  if(!toggleBtn(btn)) return;
+  const ratios={just:5/4,eq:Math.pow(2,4/12),pyth:81/64};
+  startTone(C4,0.15,-0.3);
+  startTone(C4*ratios[sys],0.15,0.3);
+}
+
+function playJustChord(btn){
+  if(!toggleBtn(btn)) return;
+  [C4,C4*5/4,C4*3/2].forEach(f=>startTone(f,0.12));
+}
+
+function playAllThree(btn){
+  if(!toggleBtn(btn)) return;
+  const thirds=[5/4, Math.pow(2,4/12), 81/64];
+  const labels=['순정율','평균율','피타고라스'];
+  let i=0;
+  function next(){
+    stopAllSound();
+    if(!btn.classList.contains('playing')) return;
+    startTone(C4,0.13,-0.3);
+    startTone(C4*thirds[i],0.13,0.3);
+    btn.textContent=`■ 정지 (${labels[i]})`;
+    i=(i+1)%3;
+    allThreeTimer=setTimeout(next,2500);
+  }
+  next();
+}
+
+function playKeyChord(btn){
+  if(!toggleBtn(btn)) return;
+  const semi=KEY_SEMI[selKey];
+  const JUST={0:0,1:111.73,2:203.91,3:315.64,4:386.31,5:498.04,6:590.22,7:701.96,8:813.69,9:884.36,10:996.09,11:1088.27};
+  const rootHz=130.813*Math.pow(2,JUST[semi%12]/1200+(semi>=12?1:0));
+  const thirdHz=130.813*Math.pow(2,JUST[(semi+4)%12]/1200+((semi+4)>=12?1:0));
+  const fifthHz=130.813*Math.pow(2,JUST[(semi+7)%12]/1200+((semi+7)>=12?1:0));
+  [rootHz,thirdHz,fifthHz].forEach(f=>startTone(f,0.12));
 }
 
 // ══ WAVE DEMO ══
@@ -851,9 +885,11 @@ function buildFifthChain(){
 function stepFifth(){if(fstep<11)fstep++;buildFifthChain();}
 function resetFifth(){fstep=0;buildFifthChain();}
 function playFifthNote(){
-  const ac=getAC(),now=ac.currentTime+0.05;
+  const btn=document.querySelector('#s4 .tbtn:nth-child(2)');
+  stopAllSound();
   const f=C4*Math.pow(2,FCENTS[fstep]/1200);
-  tone(C4,now,1.5); tone(f,now,1.5);
+  startTone(C4,0.13,-0.3);
+  startTone(f,0.13,0.3);
 }
 
 // ══ KEY ERR VIS (S6) ══
@@ -894,21 +930,7 @@ function renderKeyErr(){
       <div style="font-family:'JetBrains Mono',monospace;font-size:.72rem;font-weight:600;color:${col};min-width:180px">${msg}</div>
     </div>`;
 }
-function playKeyChord(btn){
-  if(!btn.dataset.orig)btn.dataset.orig=btn.textContent;
-  stopAllBtns();
-  btn.classList.add('playing');btn.textContent='■ 정지';
-  setTimeout(()=>{btn.classList.remove('playing');btn.textContent=btn.dataset.orig;},2500);
-  const semi=KEY_SEMI[selKey];
-  const root=C4*Math.pow(2,semi/12);
-  const ac=getAC(),now=ac.currentTime+0.05;
-  // C조율 순정율 건반 기준 주파수 (C3=130.813기준 justCents 그대로)
-  const JUST={0:0,1:111.73,2:203.91,3:315.64,4:386.31,5:498.04,6:590.22,7:701.96,8:813.69,9:884.36,10:996.09,11:1088.27};
-  const rootHz=130.813*Math.pow(2,JUST[semi%12]/1200+(semi>=12?1:0));
-  const thirdHz=130.813*Math.pow(2,JUST[(semi+4)%12]/1200+((semi+4)>=12?1:0));
-  const fifthHz=130.813*Math.pow(2,JUST[(semi+7)%12]/1200+((semi+7)>=12?1:0));
-  [rootHz,thirdHz,fifthHz].forEach(f=>tone(f,now,2.2));
-}
+
 
 // ══ BAR VIS ══
 function buildBars(){
