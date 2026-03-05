@@ -723,6 +723,7 @@ function updatePips(){
   document.getElementById('btnNext').textContent=cur===TOTAL?'처음으로':'다음 →';
 }
 function goTo(n){
+  stopAllBtns();
   const prev=document.getElementById('s'+cur);
   prev.classList.remove('active'); prev.classList.add('exit');
   setTimeout(()=>prev.classList.remove('exit'),380);
@@ -774,6 +775,10 @@ function stopAllBtns(){
   document.querySelectorAll('.play-btn.playing').forEach(b=>{
     b.classList.remove('playing');
     if(b.dataset.orig)b.textContent=b.dataset.orig;
+  });
+  document.querySelectorAll('.tbtn.on[data-orig]').forEach(b=>{
+    b.classList.remove('on');
+    b.textContent=b.dataset.orig;
   });
 }
 
@@ -886,7 +891,17 @@ function stepFifth(){if(fstep<11)fstep++;buildFifthChain();}
 function resetFifth(){fstep=0;buildFifthChain();}
 function playFifthNote(){
   const btn=document.querySelector('#s4 .tbtn:nth-child(2)');
+  if(!btn) return;
+  if(!btn.dataset.orig) btn.dataset.orig=btn.textContent;
+  if(btn.classList.contains('on')){
+    stopAllSound();
+    btn.classList.remove('on');
+    btn.textContent=btn.dataset.orig;
+    return;
+  }
   stopAllSound();
+  btn.classList.add('on');
+  btn.textContent='■ 정지';
   const f=C4*Math.pow(2,FCENTS[fstep]/1200);
   startTone(C4,0.13,-0.3);
   startTone(f,0.13,0.3);
