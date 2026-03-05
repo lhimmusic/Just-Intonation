@@ -1,0 +1,1588 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>순정율 · 피타고라스 · 평균율 비교</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+
+:root{
+  /* Surface */
+  --bg:      #f2efe8;
+  --paper:   #faf8f4;
+  --panel:   #fff;
+  --ink:     #1a1710;
+  --ink2:    #3a3628;
+  --muted:   #8c8370;
+  --faint:   #b5ae9f;
+  --rule:    #e0d9cd;
+  --hi:      #ede7d8;
+
+  /* Brand colours — richer, more distinct */
+  --eq:      #1246a0;   /* deep cobalt */
+  --eq-bg:   #eef2fc;
+  --just:    #a02010;   /* burgundy */
+  --just-bg: #fdf0ee;
+  --kb:      #a85800;   /* amber — C건반 어긋난 순정 */
+  --kb-bg:   #fdf5e4;
+  --pyth:    #145e28;   /* forest */
+  --pyth-bg: #edf7f0;
+
+  /* Status */
+  --good:    #166834;
+  --good-bg: #eaf4ee;
+  --warn:    #7a4d00;
+  --warn-bg: #fdf5e4;
+  --bad:     #a01010;
+  --bad-bg:  #fdeaea;
+
+  /* Geometry */
+  --r:  4px;
+  --r2: 6px;
+  --sh: 0 1px 3px rgba(0,0,0,.07), 0 3px 10px rgba(0,0,0,.05);
+}
+
+/* ── Reset & base ── */
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:'Libre Baskerville',serif;
+  font-size:15px;
+  line-height:1.6;
+  min-height:100vh;
+  padding-bottom:5rem;
+  -webkit-font-smoothing:antialiased;
+}
+.page{max-width:1000px;margin:0 auto;padding:0 1.5rem;}
+
+/* ── Header ── */
+header{
+  padding:2rem 0 1.2rem;
+  border-bottom:2px solid var(--ink);
+  margin-bottom:1.8rem;
+}
+h1{
+  font-size:clamp(1.25rem,3vw,1.85rem);
+  font-weight:700;
+  letter-spacing:-.025em;
+  line-height:1.18;
+  color:var(--ink);
+}
+h1 em{
+  display:block;
+  font-size:.52em;
+  font-weight:400;
+  font-style:italic;
+  color:var(--muted);
+  margin-top:.3rem;
+  letter-spacing:0;
+}
+.badges{
+  display:flex;gap:.45rem;
+  margin-top:.9rem;
+  flex-wrap:wrap;
+}
+.badge{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.65rem;
+  font-weight:500;
+  padding:.22rem .7rem;
+  border:1.5px solid;
+  border-radius:var(--r);
+  letter-spacing:.04em;
+}
+.bj{border-color:var(--just);color:var(--just);background:var(--just-bg);}
+.bkb{border-color:var(--kb);  color:var(--kb);  background:var(--kb-bg);}
+.bp{border-color:var(--pyth);color:var(--pyth);background:var(--pyth-bg);}
+.be{border-color:var(--eq);  color:var(--eq);  background:var(--eq-bg);}
+
+/* ── Controls row ── */
+.ctrl{
+  background:var(--panel);
+  border:1px solid var(--rule);
+  border-radius:var(--r2);
+  box-shadow:var(--sh);
+  padding:.85rem 1.2rem;
+  margin-bottom:1.5rem;
+  display:flex;gap:1.4rem;
+  flex-wrap:wrap;
+  align-items:flex-start;
+}
+.cg{display:flex;flex-direction:column;gap:.45rem;}
+.cg label{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.6rem;
+  font-weight:500;
+  color:var(--faint);
+  letter-spacing:.14em;
+  text-transform:uppercase;
+}
+.cg > div{display:flex;flex-wrap:wrap;gap:.3rem;}
+
+.kbtn{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.72rem;
+  font-weight:400;
+  padding:.25rem .65rem;
+  border:1.5px solid var(--rule);
+  background:var(--paper);
+  color:var(--ink2);
+  cursor:pointer;
+  border-radius:var(--r);
+  transition:all .13s;
+  letter-spacing:.02em;
+  line-height:1.4;
+}
+.kbtn:hover{
+  border-color:var(--ink2);
+  background:var(--hi);
+}
+.kbtn.on{
+  background:var(--ink);
+  border-color:var(--ink);
+  color:#fff;
+  font-weight:500;
+}
+
+/* ── Keyboard visualisation ── */
+.kb-section{
+  background:var(--panel);
+  border:1px solid var(--rule);
+  border-radius:var(--r2);
+  box-shadow:var(--sh);
+  padding:1rem 1.2rem 1.1rem;
+  margin-bottom:1.5rem;
+}
+.kb-title{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.62rem;
+  font-weight:500;
+  letter-spacing:.13em;
+  text-transform:uppercase;
+  color:var(--muted);
+  margin-bottom:.75rem;
+}
+.kb-legend{
+  display:flex;gap:1.2rem;
+  margin-bottom:.85rem;
+  flex-wrap:wrap;
+  align-items:center;
+}
+.kl-item{
+  display:flex;align-items:center;gap:.38rem;
+  font-family:'JetBrains Mono',monospace;
+  font-size:.65rem;
+  color:var(--ink2);
+}
+.kl-dot{width:11px;height:11px;border-radius:50%;flex-shrink:0;}
+.kl-dash{width:14px;height:2px;border-radius:1px;flex-shrink:0;background:var(--faint);}
+svg.kb-svg{display:block;width:100%;height:auto;}
+
+/* ── Play cards ── */
+.cards{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:.75rem;
+  margin-bottom:1.4rem;
+}
+@media(max-width:700px){.cards{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:400px){.cards{grid-template-columns:1fr;}}
+
+.card{
+  border:2px solid var(--rule);
+  border-radius:var(--r2);
+  padding:.9rem 1rem 1rem;
+  cursor:pointer;
+  background:var(--panel);
+  text-align:left;
+  transition:all .14s;
+  user-select:none;
+  box-shadow:var(--sh);
+  position:relative;
+  overflow:hidden;
+}
+.card::before{
+  content:'';
+  position:absolute;
+  top:0;left:0;right:0;
+  height:3px;
+  border-radius:var(--r2) var(--r2) 0 0;
+  opacity:0;
+  transition:opacity .14s;
+}
+.card-e::before{background:var(--eq);}
+.card-j::before{background:var(--just);}
+.card-kb::before{background:var(--kb);}
+.card-p::before{background:var(--pyth);}
+
+.card:hover{
+  transform:translateY(-2px);
+  box-shadow:0 4px 16px rgba(0,0,0,.1);
+}
+.card:hover::before,.card.playing::before{opacity:1;}
+.card.playing{
+  transform:translateY(-2px);
+  box-shadow:0 4px 16px rgba(0,0,0,.1);
+}
+.card-e.playing{border-color:var(--eq);}
+.card-j.playing{border-color:var(--just);}
+.card-kb.playing{border-color:var(--kb);}
+.card-p.playing{border-color:var(--pyth);}
+
+.card-tag{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.6rem;
+  font-weight:500;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  display:block;
+  margin-bottom:.32rem;
+}
+.card-name{
+  font-family:'Libre Baskerville',serif;
+  font-weight:700;
+  font-size:.92rem;
+  line-height:1.35;
+  display:block;
+  margin-bottom:.18rem;
+  color:var(--ink);
+}
+.card-desc{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.62rem;
+  color:var(--muted);
+  line-height:1.65;
+  display:block;
+}
+.card-stat{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.65rem;
+  font-weight:500;
+  margin-top:.5rem;
+  display:block;
+  min-height:1em;
+  color:var(--muted);
+}
+.card-bar{
+  height:2px;
+  background:var(--rule);
+  border-radius:2px;
+  margin-top:.55rem;
+  overflow:hidden;
+}
+.card-bar-fill{
+  height:100%;
+  width:0;
+  border-radius:2px;
+  transition:width .1s linear;
+}
+
+/* ── Simultaneous playback buttons ── */
+.sim-row{
+  display:flex;gap:.5rem;
+  align-items:center;
+  margin-bottom:1.4rem;
+  flex-wrap:wrap;
+}
+.sbtn{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.68rem;
+  font-weight:400;
+  padding:.3rem .9rem;
+  border:1.5px solid var(--rule);
+  background:var(--panel);
+  color:var(--ink2);
+  cursor:pointer;
+  border-radius:var(--r);
+  transition:all .13s;
+  box-shadow:var(--sh);
+}
+.sbtn:hover{
+  border-color:var(--ink2);
+  background:var(--hi);
+}
+.sbtn.on{
+  background:var(--ink);
+  border-color:var(--ink);
+  color:#fff;
+}
+#btnStop{
+  color:var(--bad);
+  border-color:var(--bad);
+  background:var(--bad-bg);
+}
+#btnStop:hover{
+  background:var(--bad);
+  color:#fff;
+}
+
+/* ── Chord strip ── */
+.strip-wrap{
+  background:var(--panel);
+  border:1px solid var(--rule);
+  border-radius:var(--r2);
+  box-shadow:var(--sh);
+  padding:.85rem 1.1rem;
+  margin-bottom:1.5rem;
+}
+.strip-label{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.6rem;
+  font-weight:500;
+  letter-spacing:.13em;
+  text-transform:uppercase;
+  color:var(--faint);
+  margin-bottom:.7rem;
+}
+.strip{display:flex;gap:.5rem;}
+.sc{
+  flex:1;
+  border:1.5px solid var(--rule);
+  border-radius:var(--r);
+  padding:.5rem .35rem;
+  text-align:center;
+  transition:all .2s;
+  min-width:0;
+  background:var(--paper);
+}
+.sc.hi-e{border-color:var(--eq);  background:var(--eq-bg);}
+.sc.hi-j{border-color:var(--just);background:var(--just-bg);}
+.sc.hi-kb{border-color:var(--kb); background:var(--kb-bg);}
+.sc.hi-p{border-color:var(--pyth);background:var(--pyth-bg);}
+.sc.hi-s{border-color:var(--ink); background:var(--hi);}
+.sc .sr{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.55rem;
+  font-weight:500;
+  color:var(--faint);
+  display:block;
+  margin-bottom:.1rem;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+}
+.sc .sn{
+  font-family:'Libre Baskerville',serif;
+  font-weight:700;
+  font-size:.95rem;
+  line-height:1;
+  display:block;
+  color:var(--ink);
+}
+.sc .sq{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.56rem;
+  color:var(--muted);
+  display:block;
+  margin-top:.1rem;
+}
+
+/* ── Section headers ── */
+.sec{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.62rem;
+  font-weight:500;
+  letter-spacing:.13em;
+  text-transform:uppercase;
+  color:var(--muted);
+  margin-bottom:.8rem;
+  padding-bottom:.38rem;
+  border-bottom:1px solid var(--rule);
+}
+
+/* ── Deviation table ── */
+.tbl-wrap{
+  overflow-x:auto;
+  border:1px solid var(--rule);
+  border-radius:var(--r2);
+  box-shadow:var(--sh);
+  margin-bottom:1.6rem;
+}
+table{border-collapse:collapse;width:100%;min-width:500px;}
+thead th{
+  padding:.55rem .6rem;
+  text-align:center;
+  font-family:'JetBrains Mono',monospace;
+  font-size:.6rem;
+  font-weight:500;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  border-bottom:2px solid var(--ink);
+  background:var(--hi);
+  white-space:nowrap;
+  color:var(--ink2);
+}
+th.tl,td.tl{text-align:left;padding-left:1rem;}
+tbody td{
+  padding:.5rem .6rem;
+  border-bottom:1px solid var(--rule);
+  text-align:center;
+  vertical-align:middle;
+  font-family:'JetBrains Mono',monospace;
+  font-size:.72rem;
+  background:var(--panel);
+}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover td{background:var(--hi);}
+tbody tr.row-hi td{background:#fff8e2!important;}
+
+.bar-cell{width:110px;}
+.bt{
+  position:relative;
+  height:14px;
+  background:var(--rule);
+  border-radius:3px;
+  overflow:hidden;
+}
+.bz{
+  position:absolute;
+  left:50%;top:-2px;bottom:-2px;
+  width:1.5px;
+  background:var(--faint);
+  transform:translateX(-50%);
+}
+.bf{position:absolute;top:2px;bottom:2px;border-radius:2px;}
+.bv{
+  font-size:.65rem;
+  font-weight:500;
+  text-align:center;
+  margin-top:.12rem;
+}
+/* Coloured cell backgrounds for status */
+.cell-good{background:var(--good-bg)!important;color:var(--good);}
+.cell-warn{background:var(--warn-bg)!important;color:var(--warn);}
+.cell-bad {background:var(--bad-bg)!important; color:var(--bad);}
+
+/* ── Waveforms ── */
+.wave-row{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:.75rem;
+  margin-bottom:1.5rem;
+}
+@media(max-width:700px){.wave-row{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:400px){.wave-row{grid-template-columns:1fr;}}
+.wp{
+  background:var(--panel);
+  border:1px solid var(--rule);
+  border-radius:var(--r2);
+  box-shadow:var(--sh);
+  padding:.7rem .85rem .8rem;
+}
+.wp label{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.62rem;
+  font-weight:500;
+  display:block;
+  margin-bottom:.35rem;
+  letter-spacing:.04em;
+}
+canvas{
+  width:100%;
+  height:52px;
+  display:block;
+  background:var(--bg);
+  border:1px solid var(--rule);
+  border-radius:2px;
+}
+.bval{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.63rem;
+  font-weight:500;
+  margin-top:.3rem;
+}
+
+/* ── Explainer ── */
+.expl{
+  background:var(--panel);
+  border:1px solid var(--rule);
+  border-left:3px solid var(--ink);
+  border-radius:0 var(--r2) var(--r2) 0;
+  box-shadow:var(--sh);
+  padding:1rem 1.2rem;
+  font-size:.85rem;
+  line-height:1.9;
+  color:var(--muted);
+  margin-bottom:1.5rem;
+}
+.expl strong{color:var(--ink);font-weight:700;}
+.mono{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.78rem;
+  background:var(--hi);
+  padding:.06rem .28rem;
+  border-radius:3px;
+  color:var(--ink2);
+}
+
+/* ── Comparison dropdowns ── */
+.cmp-section{margin-bottom:1.5rem;}
+.cmp-row{
+  display:flex;align-items:center;gap:.6rem;
+  flex-wrap:wrap;
+  background:var(--panel);
+  border:1px solid var(--rule);
+  border-radius:var(--r2);
+  box-shadow:var(--sh);
+  padding:.75rem 1rem;
+  margin-bottom:.9rem;
+}
+.cmp-sel{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.72rem;
+  padding:.3rem .55rem;
+  border:1.5px solid var(--rule);
+  border-radius:var(--r);
+  background:var(--paper);
+  color:var(--ink2);
+  cursor:pointer;
+  flex:1;
+  min-width:160px;
+}
+.cmp-sel:focus{outline:none;border-color:var(--ink2);}
+.cmp-vs{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.75rem;
+  font-weight:600;
+  color:var(--faint);
+  flex-shrink:0;
+}
+.cmp-play-btn{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.72rem;
+  font-weight:500;
+  padding:.3rem 1rem;
+  border:1.5px solid var(--ink);
+  background:var(--ink);
+  color:#fff;
+  cursor:pointer;
+  border-radius:var(--r);
+  transition:all .13s;
+  flex-shrink:0;
+}
+.cmp-play-btn:hover{background:var(--ink2);border-color:var(--ink2);}
+.cmp-play-btn.on{background:var(--just);border-color:var(--just);}
+
+/* ── Comparison notes ── */
+.cmp-notes{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:.65rem;
+  margin-bottom:1rem;
+}
+@media(max-width:700px){.cmp-notes{grid-template-columns:1fr;}}
+.cmp-note{
+  background:var(--panel);
+  border:1px solid var(--rule);
+  border-radius:var(--r);
+  padding:.65rem .8rem;
+  font-size:.75rem;
+  line-height:1.75;
+  color:var(--muted);
+}
+.cmp-note-label{
+  display:block;
+  font-family:'JetBrains Mono',monospace;
+  font-size:.6rem;
+  font-weight:600;
+  letter-spacing:.04em;
+  margin-bottom:.3rem;
+}
+
+/* ── Harmony tabs ── */
+.harmony-tabs{
+  display:flex;gap:.4rem;margin-bottom:.75rem;
+}
+.htab{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.68rem;font-weight:500;
+  padding:.28rem .85rem;
+  border:1.5px solid var(--rule);
+  background:var(--paper);
+  color:var(--ink2);
+  cursor:pointer;
+  border-radius:var(--r);
+  transition:all .13s;
+}
+.htab:hover{border-color:var(--ink2);background:var(--hi);}
+.htab.on[data-sys="just"] {background:var(--just);border-color:var(--just);color:#fff;}
+.htab.on[data-sys="eq"]   {background:var(--eq);  border-color:var(--eq);  color:#fff;}
+.htab.on[data-sys="pyth"] {background:var(--pyth);border-color:var(--pyth);color:#fff;}
+
+/* ── Harmony legend ── */
+.harmony-legend{
+  display:flex;gap:1rem;flex-wrap:wrap;
+  margin-bottom:1.5rem;
+  font-family:'JetBrains Mono',monospace;
+  font-size:.65rem;color:var(--muted);
+}
+.hl-item{display:flex;align-items:center;gap:.35rem;}
+.hl-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.hc-perfect{background:var(--good-bg)!important;color:var(--good);font-weight:600;}
+.hc-near   {background:var(--warn-bg)!important;color:var(--warn);}
+.hc-rough  {background:var(--bad-bg)!important; color:var(--bad);}
+
+/* ── Footer ── */
+footer{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.6rem;
+  font-weight:300;
+  color:var(--faint);
+  text-align:center;
+  padding-top:.9rem;
+  border-top:1px solid var(--rule);
+  margin-top:1.5rem;
+  letter-spacing:.12em;
+}
+</style>
+<script>
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('keydown', e => {
+  if(e.key==='F12') e.preventDefault();
+  if(e.ctrlKey && e.shiftKey && ['I','J','C'].includes(e.key.toUpperCase())) e.preventDefault();
+  if(e.ctrlKey && e.key.toUpperCase()==='U') e.preventDefault();
+  if(e.ctrlKey && e.key.toUpperCase()==='S') e.preventDefault();
+});
+</script>
+</head>
+<body>
+<div class="page">
+
+<header>
+  <h1>순정율 · 피타고라스 · 평균율 비교
+    <em>조옮김 시 각 조율 시스템이 어떻게 달라지는가</em>
+  </h1>
+  <div class="badges">
+    <span class="badge be">평균율 Equal Temperament</span>
+    <span class="badge bj">순정율 Just (이상적)</span>
+    <span class="badge bkb">순정율 Just (C건반·어긋남)</span>
+    <span class="badge bp">피타고라스 Pythagorean (3-limit)</span>
+  </div>
+</header>
+
+<!-- Controls -->
+<div class="ctrl">
+  <div class="cg">
+    <label>기준조 (C조율)</label>
+    <div id="baseKeyBtns"></div>
+  </div>
+  <div class="cg">
+    <label>조옮김 키</label>
+    <div id="keyBtns"></div>
+  </div>
+  <div class="cg">
+    <label>진행</label>
+    <div id="progBtns"></div>
+  </div>
+</div>
+
+<!-- Keyboard visualization -->
+<div class="kb-section">
+  <div class="kb-title">건반 일렬 배치 — 한 옥타브 내 각 음의 위치 (cent 기준)</div>
+  <div class="kb-legend">
+    <div class="kl-item"><div class="kl-dot" style="background:var(--eq)"></div>평균율</div>
+    <div class="kl-item"><div class="kl-dot" style="background:var(--just)"></div>순정율 (지금 키 조율)</div>
+    <div class="kl-item"><div class="kl-dot" style="background:var(--kb)"></div>순정율 (C키 조율 고정)</div>
+    <div class="kl-item"><div class="kl-dot" style="background:var(--pyth)"></div>피타고라스</div>
+    <div class="kl-item"><div class="kl-dash"></div>평균율 위치 기준선</div>
+  </div>
+  <svg class="kb-svg" id="kbSvg" viewBox="0 0 940 170" xmlns="http://www.w3.org/2000/svg"></svg>
+</div>
+
+<!-- Play cards -->
+<div class="cards">
+  <button class="card card-e" id="cardE">
+    <span class="card-tag" style="color:var(--eq)">평균율 (Equal Temperament)</span>
+    <span class="card-name" id="nameE">C – Am – Dm – G</span>
+    <span class="card-desc">반음 균등 100¢ 분할<br>모든 조성 동일</span>
+    <span class="card-stat" id="statE">▶ 재생</span>
+    <div class="card-bar"><div class="card-bar-fill" id="pbE" style="background:var(--eq)"></div></div>
+  </button>
+  <button class="card card-j" id="cardJ">
+    <span class="card-tag" style="color:var(--just)">순정율 — 이상적</span>
+    <span class="card-name" id="nameJ">C – Am – Dm – G</span>
+    <span class="card-desc">선택 키 기준 정수비<br>해당 조에서 완벽한 협화음</span>
+    <span class="card-stat" id="statJ">▶ 재생</span>
+    <div class="card-bar"><div class="card-bar-fill" id="pbJ" style="background:var(--just)"></div></div>
+  </button>
+  <button class="card card-kb" id="cardKB">
+    <span class="card-tag" style="color:var(--kb)">순정율 — C건반 연주 (어긋남)</span>
+    <span class="card-name" id="nameKB">C – Am – Dm – G</span>
+    <span class="card-desc">C조율 건반으로 조옮김 연주<br>비율 어긋남 → 맥놀이 발생</span>
+    <span class="card-stat" id="statKB">▶ 재생</span>
+    <div class="card-bar"><div class="card-bar-fill" id="pbKB" style="background:var(--kb)"></div></div>
+  </button>
+  <button class="card card-p" id="cardP">
+    <span class="card-tag" style="color:var(--pyth)">피타고라스 (Pythagorean)</span>
+    <span class="card-name" id="nameP">C – Am – Dm – G</span>
+    <span class="card-desc">순5도(3/2) 연속 쌓기<br>완전5도 완벽, 3도 거칠음</span>
+    <span class="card-stat" id="statP">▶ 재생</span>
+    <div class="card-bar"><div class="card-bar-fill" id="pbP" style="background:var(--pyth)"></div></div>
+  </button>
+</div>
+
+<!-- Comparison dropdowns -->
+<div class="cmp-section">
+  <div class="sec">조율 시스템 비교 재생</div>
+  <div class="cmp-row">
+    <select class="cmp-sel" id="cmpSelA">
+      <option value="E">평균율</option>
+      <option value="J">순정율 — 지금 키에 맞춰 조율</option>
+      <option value="KB">순정율 — C키 조율 고정</option>
+      <option value="P">피타고라스 — C키 조율 고정</option>
+    </select>
+    <span class="cmp-vs">vs</span>
+    <select class="cmp-sel" id="cmpSelB">
+      <option value="J">순정율 — 지금 키에 맞춰 조율</option>
+      <option value="KB">순정율 — C키 조율 고정</option>
+      <option value="E">평균율</option>
+      <option value="P">피타고라스 — C키 조율 고정</option>
+    </select>
+    <button class="cmp-play-btn" id="btnSimPlay">▶ 동시 재생</button>
+    <button class="sbtn" id="btnStop">■ 정지</button>
+  </div>
+
+  <div class="cmp-notes">
+    <div class="cmp-note">
+      <span class="cmp-note-label" style="color:var(--just)">순정율 · 지금 키에 맞춰 조율</span>
+      연주하는 조성에 맞게 매번 새로 조율. 어떤 조성에서도 완벽한 협화음을 냅니다.
+      성악·현악 앙상블처럼 음정을 자유롭게 조절하는 악기에서 자연스럽게 일어납니다.
+    </div>
+    <div class="cmp-note">
+      <span class="cmp-note-label" style="color:var(--kb)">순정율 · C키 조율 고정</span>
+      C장조에 맞게 한 번 조율한 뒤 그대로 조옮김 연주.
+      다른 조성에서는 음정 비율이 틀어져 맥놀이(beating)가 발생합니다.
+      이 문제 때문에 역사적으로 평균율이 발전했습니다.
+    </div>
+    <div class="cmp-note">
+      <span class="cmp-note-label" style="color:var(--pyth)">피타고라스 · C키 조율 고정</span>
+      C 기준 순5도(3/2)를 12번 쌓아 만든 음계. 완전5도는 완벽하지만
+      장3도가 순정율보다 약 +22¢ 높고, 조옮김 시 늑대5도 문제가 발생합니다.
+    </div>
+  </div>
+</div>
+
+<!-- Chord strip -->
+<div class="strip-wrap">
+  <div class="strip-label">화음 진행 — 재생 중 강조</div>
+  <div class="strip" id="chordStrip"></div>
+</div>
+
+<!-- Deviation table -->
+<div class="sec">음정 오차 — 선택 키의 C조율 건반 대비 편차 (평균율 위치 기준)</div>
+<div class="tbl-wrap"><table id="devTable"></table></div>
+
+<!-- Waveform -->
+<div class="sec">파형 비교 — 근음 + 3도 합성 (재생 중 화음)</div>
+<div class="wave-row">
+  <div class="wp">
+    <label style="color:var(--eq)">평균율 — 근음+3도</label>
+    <canvas id="cvE" width="300" height="48"></canvas>
+    <div class="bval" id="bhE">—</div>
+  </div>
+  <div class="wp">
+    <label style="color:var(--just)">순정율 이상적 — 근음+3도</label>
+    <canvas id="cvJ" width="300" height="48"></canvas>
+    <div class="bval" id="bhJ">—</div>
+  </div>
+  <div class="wp">
+    <label style="color:var(--kb)">순정율 C건반(어긋남) — 근음+3도</label>
+    <canvas id="cvKB" width="300" height="48"></canvas>
+    <div class="bval" id="bhKB">—</div>
+  </div>
+  <div class="wp">
+    <label style="color:var(--pyth)">피타고라스 — 근음+3도</label>
+    <canvas id="cvP" width="300" height="48"></canvas>
+    <div class="bval" id="bhP">—</div>
+  </div>
+</div>
+
+<div class="expl" id="explBox">
+  <strong>세 조율 시스템의 핵심 차이</strong><br>
+  <strong>평균율</strong>은 모든 반음을 <span class="mono">100¢</span>씩 균등 분할 — 어느 조성에서나 동일한 구조입니다.<br>
+  <strong>순정율</strong>은 <span class="mono">5/4, 3/2</span> 등 소수 정수비로 음을 정의합니다. 기준조에서 가장 깨끗하지만, 조옮김하면 비율이 깨집니다.<br>
+  <strong>피타고라스</strong>는 순5도(<span class="mono">3/2</span>)만 연속으로 쌓아 음계를 만듭니다. 완전5도는 완벽하지만 장3도가 순정율보다 약 22¢ 더 높아 거칩니다.
+</div>
+
+<!-- Interval harmony tables -->
+<div class="sec">음정별 협화도 — 조율 시스템별</div>
+<div class="harmony-tabs">
+  <button class="htab on" data-sys="just">순정율</button>
+  <button class="htab" data-sys="eq">평균율</button>
+  <button class="htab" data-sys="pyth">피타고라스</button>
+</div>
+
+<div class="tbl-wrap" id="harmonyWrap">
+  <table id="harmonyTbl">
+    <thead id="harmonyHead"></thead>
+    <tbody id="harmonyBody"></tbody>
+  </table>
+</div>
+
+<div class="harmony-legend">
+  <span class="hl-item"><span class="hl-dot" style="background:var(--good)"></span>완벽 (0–2¢)</span>
+  <span class="hl-item"><span class="hl-dot" style="background:var(--warn)"></span>근사 (3–15¢)</span>
+  <span class="hl-item"><span class="hl-dot" style="background:var(--bad)"></span>거침 (16¢+)</span>
+</div>
+
+<footer>순정율 · 피타고라스 · 평균율 비교 교육 시각화</footer>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// TUNING MATH
+// ═══════════════════════════════════════════
+const CHROMA_SHARP = ['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'];
+const CHROMA_FLAT  = ['C','D♭','D','E♭','E','F','G♭','G','A♭','A','B♭','B'];
+// Use sharps or flats per key
+const KEY_PREFER_FLAT = new Set([5,10,3,8]); // F Bb Eb Ab
+
+function noteName(semi) {
+  const s = ((semi%12)+12)%12;
+  return KEY_PREFER_FLAT.has(currentKey) ? CHROMA_FLAT[s] : CHROMA_SHARP[s];
+}
+
+// All 12 keys
+const ALL_KEYS = [
+  {name:'C',  semi:0 }, {name:'C♯',semi:1 }, {name:'D',  semi:2 },
+  {name:'E♭',semi:3 }, {name:'E',  semi:4 }, {name:'F',  semi:5 },
+  {name:'F♯',semi:6 }, {name:'G',  semi:7 }, {name:'A♭',semi:8 },
+  {name:'A',  semi:9 }, {name:'B♭',semi:10}, {name:'B',  semi:11},
+];
+
+// ── Just intonation (5-limit) from C ──
+const JUST_CENTS = {
+  0:0, 1:111.73, 2:203.91, 3:315.64, 4:386.31,
+  5:498.04, 6:590.22, 7:701.96, 8:813.69, 9:884.36, 10:996.09, 11:1088.27
+};
+// Pythagorean from C (chain of pure 5ths, 3/2)
+// 3/2 = 701.955¢, reduce to one octave
+const PYTH_CENTS_RAW = (() => {
+  // 순5도(701.955¢)를 기준으로 C에서 상행 5도 쌓기
+  // C(0) → G(7) → D(2) → A(9) → E(4) → B(11) → F♯(6) → C♯(1) → G♯(8) → D♯(3) → A♯(10)
+  // F(5)는 C에서 하행 5도: C - 701.955¢ = 498.045¢ (= 완전4도)
+  const r = {};
+  const upOrder = [0,7,2,9,4,11,6,1,8,3,10]; // C부터 상행 5도 10번
+  let c = 0;
+  r[0] = 0;
+  for (let i = 0; i < 10; i++) {
+    c += 701.955;
+    c = ((c % 1200) + 1200) % 1200;
+    r[upOrder[i+1]] = c;
+  }
+  // F = C 하행 5도 = 1200 - 701.955 = 498.045¢
+  r[5] = 1200 - 701.955; // 498.045¢
+  return r;
+})();
+
+function justCents(semi)  { const s=((semi%12)+12)%12; return JUST_CENTS[s] + Math.floor((semi+0.5)/12)*1200; }
+function pythCents(semi)  { const s=((semi%12)+12)%12; return PYTH_CENTS_RAW[s] + Math.floor((semi+0.5)/12)*1200; }
+function eqCents(semi)    { return semi * 100; }
+
+// Frequency from cents above C3 (130.813 Hz)
+const C3 = 130.813;
+function hzFromCents(c)   { return C3 * Math.pow(2, c/1200); }
+
+// Triad voicings: [root, 3rd, 5th] in semitones from root
+const TRIADS = {
+  'maj': [0, 4, 7],
+  'min': [0, 3, 7],
+};
+
+// Diatonic triads in major
+const DIATONIC = [
+  {roman:'I',   sym:'maj', scaleSemi:0 },
+  {roman:'II',  sym:'min', scaleSemi:2 },
+  {roman:'III', sym:'min', scaleSemi:4 },
+  {roman:'IV',  sym:'maj', scaleSemi:5 },
+  {roman:'V',   sym:'maj', scaleSemi:7 },
+  {roman:'VI',  sym:'min', scaleSemi:9 },
+  {roman:'VII°',sym:'min', scaleSemi:11},
+];
+
+const PROGS = {
+  '1625':[0,5,1,4],
+  '1451':[0,3,4,0],
+  '1564':[0,4,5,3],
+  '1234':[0,1,2,3],
+};
+const PROG_LABELS = {
+  '1625':['I','VI','II','V'],
+  '1451':['I','IV','V','I'],
+  '1564':['I','V','VI','IV'],
+  '1234':['I','II','III','IV'],
+};
+
+// ── Frequency builders ──
+// 'E'  = 평균율: eqCents 기준
+// 'J'  = 이상적 순정율: 선택 키 루트를 eq 피치에 맞추고, 거기서 just 비율 적용
+//         → 어떤 키든 그 키 기준으로 완벽한 정수비
+// 'KB' = C조율 건반 순정율: C3 기준 justCents 절대값 그대로
+//         → 다른 키 연주 시 비율 어긋남 (조옮김의 함정)
+// 'P'  = 피타고라스
+
+// Just ratio table (semitone offset → ratio from root)
+const JUST_RATIOS = {
+  0:1, 1:16/15, 2:9/8, 3:6/5, 4:5/4, 5:4/3,
+  6:45/32, 7:3/2, 8:8/5, 9:5/3, 10:16/9, 11:15/8
+};
+function justRatio(semi) {
+  const s = ((semi%12)+12)%12;
+  return JUST_RATIOS[s] * Math.pow(2, Math.floor(semi/12));
+}
+
+function buildFreqs(sys, keySemi, degIdx) {
+  const d = DIATONIC[degIdx];
+  const ivs = TRIADS[d.sym];
+
+  if (sys === 'J') {
+    // 이상적 순정율: 선택 키 근음을 eq 피치에 고정하고 just 비율로 각 음 계산
+    // 예) F장조라면 F3_eq를 루트로 두고 그 위에 5/4, 3/2 등 적용
+    const keyRootHz = C3 * Math.pow(2, keySemi/12); // eq 피치
+    return ivs.map(iv => keyRootHz * justRatio(d.scaleSemi + iv));
+  }
+
+  if (sys === 'KB') {
+    // C조율 건반: C3 기준 justCents 절대값 → 다른 키에선 비율이 맞지 않음
+    return ivs.map(iv => hzFromCents(justCents(keySemi + d.scaleSemi + iv)));
+  }
+
+  const centFn = sys==='P' ? pythCents : eqCents;
+  return ivs.map(iv => hzFromCents(centFn(keySemi + d.scaleSemi + iv)));
+}
+
+// Deviation in cents for each interval
+// KB: C조율 건반의 실제 interval cents — 이상적 just interval cents
+// J/P/E: 해당 조율의 interval — 이상적 just interval
+const IDEAL_JUST = { 'maj':[1, 5/4, 3/2], 'min':[1, 6/5, 3/2] };
+const IDEAL_PYTH = { 'maj':[1, 81/64, 3/2], 'min':[1, 32/27, 3/2] };
+
+function calcDevs(sys, keySemi, degIdx) {
+  const d = DIATONIC[degIdx];
+  const ivs = TRIADS[d.sym];
+  const idealRatios = sys==='P' ? IDEAL_PYTH[d.sym] : IDEAL_JUST[d.sym];
+
+  if (sys === 'KB') {
+    // 실제 interval: C건반 just에서의 비율
+    const rootCents = justCents(keySemi + d.scaleSemi);
+    return ivs.map((iv, i) => {
+      const noteCents = justCents(keySemi + d.scaleSemi + iv);
+      const actual = noteCents - rootCents;
+      return actual - 1200 * Math.log2(idealRatios[i]);
+    });
+  }
+  const centFn = sys==='J' ? justCents : sys==='P' ? pythCents : eqCents;
+  const rootCents = centFn(keySemi + d.scaleSemi);
+  return ivs.map((iv, i) => {
+    const noteCents = centFn(keySemi + d.scaleSemi + iv);
+    const actual = noteCents - rootCents;
+    return actual - 1200 * Math.log2(idealRatios[i]);
+  });
+}
+
+// ═══════════════════════════════════════════
+// KEYBOARD VISUALIZATION
+// ═══════════════════════════════════════════
+const NS = 'http://www.w3.org/2000/svg';
+function svgEl(tag, attrs, parent) {
+  const e = document.createElementNS(NS, tag);
+  Object.entries(attrs).forEach(([k,v]) => e.setAttribute(k,v));
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function svgTxt(text, attrs, parent) {
+  const e = document.createElementNS(NS, 'text');
+  Object.entries(attrs).forEach(([k,v]) => e.setAttribute(k,v));
+  e.textContent = text;
+  if (parent) parent.appendChild(e);
+  return e;
+}
+
+function drawKeyboard() {
+  const svg = document.getElementById('kbSvg');
+  svg.innerHTML = '';
+  const VW=940, VH=170;
+  const LEFT=28, RIGHT=12;
+  const KBW = VW-LEFT-RIGHT;
+  const KBY = 30, KBH = 72;
+
+  // Background
+  svgEl('rect',{x:0,y:0,width:VW,height:VH,fill:'#f5f2ea'},svg);
+
+  // Draw 13 positions (C through C an octave above)
+  // Eq positions: note i → x = LEFT + i/12 * KBW (i=0..12)
+  for (let s = 0; s <= 12; s++) {
+    const eqX = LEFT + (s/12)*KBW;
+    const isBlack = [1,3,6,8,10].includes(s%12);
+    const eqCent = s*100;
+
+    // Vertical reference line (eq position)
+    svgEl('line',{
+      x1:eqX,y1:KBY-4,x2:eqX,y2:KBY+KBH+4,
+      stroke:'rgba(10,66,144,0.25)','stroke-width':'1','stroke-dasharray':'3 2'
+    },svg);
+
+    // Note label (eq position)
+    const noteLabel = CHROMA_SHARP[s%12] + (s===12?'':`\n${eqCent}¢`);
+    svgTxt(CHROMA_SHARP[s%12],{
+      x:eqX, y:KBY-10, 'text-anchor':'middle',
+      'font-family':'JetBrains Mono,monospace','font-size':'9',
+      fill: isBlack ? '#666' : '#333','font-weight': s%12===0?'700':'400'
+    },svg);
+  }
+
+  // Draw each note's position for all 4 systems (E / J / KB / P)
+  // J (이상적 순정): 선택 키를 eq 기준점으로 두고, 각 음을 그 키로부터의 just 간격으로 배치
+  // 12음 전체 표시. JUST_CENTS는 C기준 5-limit chromatic just 간격표를 그대로 활용
+  const justIdealCents = s => {
+    const interval = ((s - currentKey) % 12 + 12) % 12;
+    const raw = currentKey * 100 + JUST_CENTS[interval];
+    // raw가 0~1200 밖이면 옥타브 shift로 맞춤
+    let c = raw;
+    while (c < 0)    c += 1200;
+    while (c >= 1200) c -= 1200;
+    return c;
+  };
+
+  const SYS = [
+    {id:'E',  col:'#1246a0', centFn: eqCents,        y: KBY+10, label:'평균'},
+    {id:'J',  col:'#a02010', centFn: justIdealCents,  y: KBY+26, label:'순정(키)'},
+    {id:'KB', col:'#a85800', centFn: justCents,       y: KBY+42, label:'순정(C)'},
+    {id:'P',  col:'#145e28', centFn: pythCents,       y: KBY+58, label:'피타'},
+  ];
+
+  // Draw horizontal lanes
+  SYS.forEach(({col, y, label}) => {
+    svgEl('rect',{x:LEFT-2,y:y-8,width:KBW+2,height:16,fill:col,opacity:'0.07',rx:'2'},svg);
+    svgTxt(label,{x:LEFT-4,y:y+4,'text-anchor':'end',
+      'font-family':'JetBrains Mono,monospace','font-size':'8',fill:col,'font-weight':'600'},svg);
+  });
+
+  // Draw each note's position for all 3 systems (s=0..11)
+  // activeSys: 현재 재생 중인 시스템만 강조, 나머지는 흐리게
+  const isPlaying = activeNotes.size > 0;
+
+  for (let s = 0; s <= 11; s++) {
+    const eqX = LEFT + (s/12)*KBW;
+    const isActive = activeNotes.has(s);
+
+    SYS.forEach(({id, col, centFn, y}) => {
+      const cents = centFn(s);
+      const x = LEFT + (cents/1200)*KBW;
+      const diff = cents - s*100;
+
+      // 재생 중일 때: 선택된 시스템만 선명, 나머지 아주 흐리게
+      const inActiveSys = !isPlaying || activeSys.has(id);
+      const baseOp = inActiveSys ? 0.55 : 0.12;
+
+      if (Math.abs(diff) > 0.5) {
+        svgEl('line',{x1:eqX,y1:y,x2:x,y2:y,
+          stroke:col,
+          'stroke-width': (isActive && inActiveSys) ? '2' : '1',
+          opacity: (isActive && inActiveSys) ? '0.7' : (inActiveSys ? '0.3' : '0.08')
+        },svg);
+      }
+
+      const r  = (isActive && inActiveSys) ? '7' : '4.5';
+      const op = (isActive && inActiveSys) ? '1' : String(baseOp);
+      svgEl('circle',{cx:x,cy:y,r,fill:col,opacity:op},svg);
+
+      // 편차 수치: 활성 음 + 활성 시스템만
+      if (isActive && inActiveSys && Math.abs(diff) > 0.3) {
+        const sign = diff > 0 ? '+' : '';
+        svgTxt(`${sign}${diff.toFixed(1)}¢`,{
+          x:x, y: id==='E' ? y+16 : y-11,
+          'text-anchor':'middle',
+          'font-family':'JetBrains Mono,monospace',
+          'font-size':'8', fill:col, 'font-weight':'600'
+        },svg);
+      }
+    });
+  }
+
+  // Legend for active chord highlight
+  if (activeNotes.size > 0) {
+    svgTxt('● 현재 화음 음표',{
+      x:VW-RIGHT, y:VH-6, 'text-anchor':'end',
+      'font-family':'JetBrains Mono,monospace','font-size':'8',fill:'#555'
+    },svg);
+  }
+}
+
+// ═══════════════════════════════════════════
+// AUDIO
+// ═══════════════════════════════════════════
+let actx=null, anodes=[];
+function getAC(){if(!actx)actx=new(window.AudioContext||window.webkitAudioContext)();return actx;}
+function stopAll(){anodes.forEach(n=>{try{n.stop();}catch(e){}});anodes=[];}
+function tone(freq,t0,dur,vol=0.18,pan=0){
+  if(freq<30||freq>3000)return;
+  const ctx=getAC(),o=ctx.createOscillator(),g=ctx.createGain(),p=ctx.createStereoPanner();
+  o.type='triangle'; o.frequency.value=freq; p.pan.value=pan;
+  g.gain.setValueAtTime(0,t0);
+  g.gain.linearRampToValueAtTime(vol,t0+0.02);
+  g.gain.setValueAtTime(vol,t0+dur*0.72);
+  g.gain.exponentialRampToValueAtTime(0.001,t0+dur);
+  o.connect(g);g.connect(p);p.connect(ctx.destination);
+  o.start(t0);o.stop(t0+dur+0.06);
+  anodes.push(o);
+}
+function playChord(freqs,t0,dur,pan=0){freqs.forEach(f=>tone(f,t0,dur,0.18,pan));}
+
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+let currentKey = 0;    // semitones (0=C)
+let currentProg = '1625';
+let activeNotes = new Set(); // semitones active in current chord
+let activeSys = new Set();   // which systems are currently playing (for keyboard highlight)
+const CHORD_DUR=1.9, CHORD_GAP=0.08;
+let timers={J:[],KB:[],P:[],E:[],S:[]};
+function clearT(k){timers[k].forEach(clearTimeout);timers[k]=[];}
+function clearAllT(){Object.keys(timers).forEach(clearT);}
+
+// ═══════════════════════════════════════════
+// PLAYBACK
+// ═══════════════════════════════════════════
+function startBar(id,col,dur){
+  const b=document.getElementById(id);
+  b.style.transition='none';b.style.width='0%';b.style.background=col;
+  requestAnimationFrame(()=>{b.style.transition=`width ${dur}s linear`;b.style.width='100%';});
+  setTimeout(()=>{b.style.transition='width .3s';b.style.width='0%';},dur*1000+100);
+}
+
+function resetUI(){
+  ['J','KB','P','E'].forEach(s=>{
+    document.getElementById('card'+s).classList.remove('playing');
+    const st=document.getElementById('stat'+s);
+    st.textContent='▶ 재생'; st.style.color='';
+  });
+  document.querySelectorAll('.sc').forEach(el=>
+    el.classList.remove('hi-j','hi-kb','hi-p','hi-e','hi-s'));
+  ['btnSimPlay'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.classList.remove('on');
+  });
+  activeNotes.clear();
+  activeSys.clear();
+  drawKeyboard();
+}
+
+function playSystem(sys) {
+  stopAll(); clearAllT(); resetUI();
+  document.getElementById('card'+sys).classList.add('playing');
+  const prog=PROGS[currentProg];
+  const totalDur=prog.length*(CHORD_DUR+CHORD_GAP);
+  const COL={J:'var(--just)',KB:'var(--kb)',P:'var(--pyth)',E:'var(--eq)'};
+  const HI={J:'hi-j',KB:'hi-kb',P:'hi-p',E:'hi-e'};
+  startBar('pb'+sys,COL[sys],totalDur);
+  const ctx2=getAC(),now=ctx2.currentTime+0.05;
+
+  prog.forEach((degIdx,i)=>{
+    const freqs=buildFreqs(sys,currentKey,degIdx);
+    playChord(freqs,now+i*(CHORD_DUR+CHORD_GAP),CHORD_DUR);
+    const t=setTimeout(()=>{
+      document.querySelectorAll('.sc').forEach(el=>el.classList.remove('hi-j','hi-p','hi-e','hi-s'));
+      document.querySelector(`.sc[data-seq="${i}"]`)?.classList.add(HI[sys]);
+      updateWaves(degIdx);
+      highlightTableRow(degIdx);
+      setActiveNotes(sys,degIdx);
+      updateStatus(sys,degIdx);
+    },i*(CHORD_DUR+CHORD_GAP)*1000);
+    timers[sys].push(t);
+  });
+  const endT=setTimeout(()=>{
+    document.getElementById('card'+sys).classList.remove('playing');
+    document.getElementById('stat'+sys).textContent='▶ 재생';
+    document.getElementById('stat'+sys).style.color='';
+    document.querySelectorAll('.sc').forEach(el=>el.classList.remove('hi-j','hi-p','hi-e','hi-s'));
+    activeNotes.clear(); drawKeyboard();
+  },(totalDur+0.3)*1000);
+  timers[sys].push(endT);
+}
+
+function playSim(sysA, sysB, btnId){
+  stopAll();clearAllT();resetUI();
+  const btn=document.getElementById(btnId);
+  if(btn) btn.classList.add('on');
+  const prog=PROGS[currentProg];
+  const totalDur=prog.length*(CHORD_DUR+CHORD_GAP);
+  const COL={J:'var(--just)',KB:'var(--kb)',P:'var(--pyth)',E:'var(--eq)'};
+  startBar('pb'+sysA,COL[sysA],totalDur);
+  startBar('pb'+sysB,COL[sysB],totalDur);
+  const ctx2=getAC(),now=ctx2.currentTime+0.05;
+  prog.forEach((degIdx,i)=>{
+    // 두 시스템 모두 pan=0 (양쪽 스피커 동시)
+    playChord(buildFreqs(sysA,currentKey,degIdx),now+i*(CHORD_DUR+CHORD_GAP),CHORD_DUR, 0);
+    playChord(buildFreqs(sysB,currentKey,degIdx),now+i*(CHORD_DUR+CHORD_GAP),CHORD_DUR, 0);
+    const t=setTimeout(()=>{
+      document.querySelectorAll('.sc').forEach(el=>
+        el.classList.remove('hi-j','hi-kb','hi-p','hi-e','hi-s'));
+      document.querySelector(`.sc[data-seq="${i}"]`)?.classList.add('hi-s');
+      updateWaves(degIdx);
+      setActiveNotes(sysA, degIdx, sysB);
+    },i*(CHORD_DUR+CHORD_GAP)*1000);
+    timers.S.push(t);
+  });
+  const endT=setTimeout(()=>{
+    if(btn) btn.classList.remove('on');
+    document.querySelectorAll('.sc').forEach(el=>
+      el.classList.remove('hi-j','hi-kb','hi-p','hi-e','hi-s'));
+    activeNotes.clear();drawKeyboard();
+  },(totalDur+0.3)*1000);
+  timers.S.push(endT);
+}
+
+function setActiveNotes(sys, degIdx, extraSys){
+  const d=DIATONIC[degIdx];
+  const ivs=TRIADS[d.sym];
+  activeNotes.clear();
+  ivs.forEach(iv=>activeNotes.add(((currentKey+d.scaleSemi+iv)%12+12)%12));
+  activeSys.clear();
+  activeSys.add(sys);
+  if(extraSys) activeSys.add(extraSys);
+  drawKeyboard();
+}
+
+function updateStatus(sys,degIdx){
+  const st=document.getElementById('stat'+sys);
+  if(sys==='J' && currentKey===0){
+    st.textContent='✓ 완벽한 협화음'; st.style.color='var(--good)'; return;
+  }
+  if(sys==='KB'){
+    const devs=calcDevs('KB',currentKey,degIdx);
+    const maxD=Math.max(...devs.slice(1).map(Math.abs));
+    const col=maxD<2?'var(--good)':maxD<12?'var(--warn)':'var(--bad)';
+    const label=maxD<2?'✓ 오차 없음':maxD<12?`△ 최대 ${maxD.toFixed(1)}¢ 오차`:`✗ 최대 ${maxD.toFixed(1)}¢ — 맥놀이`;
+    st.textContent=label; st.style.color=col; return;
+  }
+  const labels={J:'✓ 이상적 순정 협화음',P:'완전5도 완벽, 3도 거침',E:'기준 평균율'};
+  const cols  ={J:'var(--good)',P:'var(--pyth)',E:'var(--eq)'};
+  if(currentKey===0){
+    st.textContent=labels[sys]||'재생 중'; st.style.color=cols[sys]||''; return;
+  }
+  const devs=calcDevs(sys,currentKey,degIdx);
+  const maxD=Math.max(...devs.slice(1).map(Math.abs));
+  const col=maxD<3?'var(--good)':maxD<12?'var(--warn)':'var(--bad)';
+  st.textContent=`재생 중 — 최대 오차 ${maxD.toFixed(1)}¢`;
+  st.style.color=col;
+}
+
+// ═══════════════════════════════════════════
+// CHORD STRIP
+// ═══════════════════════════════════════════
+function buildChordStrip(){
+  const wrap=document.getElementById('chordStrip');
+  wrap.innerHTML='';
+  const prog=PROGS[currentProg];
+  const labels=PROG_LABELS[currentProg];
+  prog.forEach((degIdx,i)=>{
+    const d=DIATONIC[degIdx];
+    const rootSemi=(currentKey+d.scaleSemi)%12;
+    const rname=noteName(rootSemi);
+    const el=document.createElement('div');
+    el.className='sc'; el.setAttribute('data-seq',i);
+    el.innerHTML=`<span class="sr">${labels[i]}</span>`+
+      `<span class="sn">${rname}</span>`+
+      `<span class="sq">${d.sym==='maj'?'maj':'min'}</span>`;
+    wrap.appendChild(el);
+  });
+}
+
+// ═══════════════════════════════════════════
+// DEVIATION TABLE
+// ═══════════════════════════════════════════
+function buildDevTable(){
+  const tbl=document.getElementById('devTable');
+  tbl.innerHTML='';
+  const prog=PROGS[currentProg];
+  const labels=PROG_LABELS[currentProg];
+
+  const thead=tbl.createTHead(),hr=thead.insertRow();
+  ['단계','화음',
+    '3도 오차 (Just이상적)','3도 오차 (Just·C건반)','3도 오차 (Pyth)',
+    '5도 오차 (Just이상적)','5도 오차 (Just·C건반)','5도 오차 (Pyth)'
+  ].forEach((t,i)=>{
+    const th=document.createElement('th');
+    th.textContent=t; if(i===0)th.className='tl';
+    if(i===2||i===5) th.style.color='var(--just)';
+    if(i===3||i===6) th.style.color='var(--kb)';
+    if(i===4||i===7) th.style.color='var(--pyth)';
+    hr.appendChild(th);
+  });
+
+  const tbody=tbl.createTBody();
+  prog.forEach((degIdx,si)=>{
+    const d=DIATONIC[degIdx];
+    const rootSemi=(currentKey+d.scaleSemi)%12;
+    const rname=noteName(rootSemi);
+    const devsJ =calcDevs('J', currentKey,degIdx);
+    const devsKB=calcDevs('KB',currentKey,degIdx);
+    const devsP =calcDevs('P', currentKey,degIdx);
+
+    const tr=tbody.insertRow(); tr.setAttribute('data-deg',degIdx);
+
+    const td0=tr.insertCell(); td0.className='tl';
+    td0.innerHTML=`<strong>${labels[si]}</strong>`;
+
+    const td1=tr.insertCell();
+    td1.innerHTML=`<span style="font-weight:600">${rname}</span>`+
+      `<span style="color:var(--muted);font-size:.62rem;margin-left:.15rem">${d.sym}</span>`;
+
+    function barCell(dv) {
+      const tdB=tr.insertCell(); tdB.className='bar-cell';
+      const pct=Math.min(Math.abs(dv)/25*50,50);
+      const isP=dv>=0;
+      const isGood=Math.abs(dv)<2, isBad=Math.abs(dv)>=14;
+      const bc=isGood?'var(--good)':isBad?'var(--bad)':'var(--warn)';
+      const bgCls=isGood?'cell-good':isBad?'cell-bad':'cell-warn';
+      tdB.classList.add(bgCls);
+      const sign=dv>=0?'+':'';
+      tdB.innerHTML=`<div class="bt"><div class="bz"></div>`+
+        `<div class="bf" style="${isP?'left:50%':'right:50%'};width:${pct}%;background:${bc};opacity:.9;"></div></div>`+
+        `<div class="bv">${sign}${dv.toFixed(1)}¢</div>`;
+    }
+    barCell(devsJ[1]); barCell(devsKB[1]); barCell(devsP[1]);
+    barCell(devsJ[2]); barCell(devsKB[2]); barCell(devsP[2]);
+  });
+}
+
+function highlightTableRow(degIdx){
+  document.querySelectorAll('tr[data-deg]').forEach(r=>r.classList.remove('row-hi'));
+  document.querySelector(`tr[data-deg="${degIdx}"]`)?.classList.add('row-hi');
+}
+
+// ═══════════════════════════════════════════
+// WAVEFORMS
+// ═══════════════════════════════════════════
+function drawWave(cvId,f1,f2,col){
+  const cv=document.getElementById(cvId);
+  if(!cv)return;
+  const ctx=cv.getContext('2d'),W=cv.width,H=cv.height;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#f2efe8';ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle='rgba(0,0,0,.07)';ctx.lineWidth=.7;
+  ctx.beginPath();ctx.moveTo(0,H/2);ctx.lineTo(W,H/2);ctx.stroke();
+  const dur=0.08,beatF=Math.abs(f1-f2);
+  ctx.strokeStyle=col+'40';ctx.lineWidth=.9;ctx.setLineDash([3,2]);
+  for(const s of[1,-1]){
+    ctx.beginPath();
+    for(let px=0;px<W;px++){
+      const t=px/W*dur,env=Math.abs(Math.cos(Math.PI*beatF*t));
+      const py=H/2-s*env*(H/2-3);
+      px===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
+    }
+    ctx.stroke();
+  }
+  ctx.setLineDash([]);
+  ctx.strokeStyle=col;ctx.lineWidth=1.5;
+  ctx.beginPath();
+  for(let px=0;px<W;px++){
+    const t=px/W*dur;
+    const y=(Math.sin(2*Math.PI*f1*t)+Math.sin(2*Math.PI*f2*t))*.5;
+    const py=H/2-y*(H/2-3);
+    px===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
+  }
+  ctx.stroke();
+  return Math.abs(f1-f2);
+}
+function beatLabel(id,bHz,col){
+  const el=document.getElementById(id);
+  el.textContent=`맥놀이 ${bHz.toFixed(2)} Hz`;
+  el.style.color=bHz>6?'var(--bad)':bHz>1.5?'var(--warn)':'var(--good)';
+}
+function updateWaves(degIdx){
+  const fJ =buildFreqs('J', currentKey,degIdx);
+  const fKB=buildFreqs('KB',currentKey,degIdx);
+  const fP =buildFreqs('P', currentKey,degIdx);
+  const fE =buildFreqs('E', currentKey,degIdx);
+  beatLabel('bhE', drawWave('cvE', fE[0], fE[1], '#1246a0'),'#1246a0');
+  beatLabel('bhJ', drawWave('cvJ', fJ[0], fJ[1], '#a02010'),'#a02010');
+  beatLabel('bhKB',drawWave('cvKB',fKB[0],fKB[1],'#a85800'),'#a85800');
+  beatLabel('bhP', drawWave('cvP', fP[0], fP[1], '#145e28'),'#145e28');
+}
+
+// ═══════════════════════════════════════════
+// UI BUILDERS
+// ═══════════════════════════════════════════
+function buildBtns(containerId, items, getCurrent, setter, getLabel) {
+  const wrap=document.getElementById(containerId);
+  wrap.style.cssText='display:flex;gap:.35rem;flex-wrap:wrap;';
+  wrap.innerHTML='';
+  items.forEach(item=>{
+    const b=document.createElement('button');
+    b.className='kbtn'+(item.val===getCurrent()?' on':'');
+    b.textContent=getLabel(item);
+    b.addEventListener('click',()=>{ setter(item.val); render(); });
+    wrap.appendChild(b);
+  });
+}
+
+function updateCardNames(){
+  const prog=PROGS[currentProg];
+  const chordStr=prog.map((di)=>{
+    const d=DIATONIC[di];
+    const rn=noteName((currentKey+d.scaleSemi)%12);
+    return rn+(d.sym==='min'?'m':'');
+  }).join(' – ');
+  ['J','KB','P','E'].forEach(s=>document.getElementById('name'+s).textContent=chordStr);
+}
+
+function updateExplainer(){
+  const keyName=ALL_KEYS.find(k=>k.semi===currentKey)?.name||'C';
+  const isCkey=currentKey===0;
+  document.getElementById('explBox').innerHTML=
+    `<strong>현재 조성: ${keyName}장조</strong>${isCkey?' (기준조 — 순정율 완벽)':`
+    <br>C기준 순정율 건반으로 ${keyName}장조 연주 시 오차 발생`}<br><br>
+    <strong>순정율</strong>은 <span class="mono">5/4, 3/2</span> 소수 정수비. 기준조에서 맥놀이 제로, 조옮김 시 비율 깨짐.<br>
+    <strong>피타고라스</strong>는 순5도 <span class="mono">3/2</span> 연속 쌓기. 완전5도 완벽(0¢ 오차), 장3도는 +21.5¢로 순정율보다 훨씬 거칩니다.<br>
+    <strong>평균율</strong>은 반음 균등 <span class="mono">100¢</span> — 어느 조성이나 동일 구조.`;
+}
+
+// ═══════════════════════════════════════════
+// HARMONY TABLE (탭 전환)
+// ═══════════════════════════════════════════
+const INTERVALS = [
+  { name:'완전8도', ratio:'2/1',   just:1200,   eq:1200,  pyth:1200,   rank:1  },
+  { name:'완전5도', ratio:'3/2',   just:701.96, eq:700,   pyth:701.96, rank:2  },
+  { name:'완전4도', ratio:'4/3',   just:498.04, eq:500,   pyth:498.04, rank:3  },
+  { name:'장3도',   ratio:'5/4',   just:386.31, eq:400,   pyth:407.82, rank:4  },
+  { name:'장6도',   ratio:'5/3',   just:884.36, eq:900,   pyth:905.87, rank:5  },
+  { name:'단3도',   ratio:'6/5',   just:315.64, eq:300,   pyth:294.13, rank:6  },
+  { name:'단6도',   ratio:'8/5',   just:813.69, eq:800,   pyth:792.18, rank:7  },
+  { name:'장2도',   ratio:'9/8',   just:203.91, eq:200,   pyth:203.91, rank:8  },
+  { name:'단7도',   ratio:'16/9',  just:996.09, eq:1000,  pyth:996.09, rank:9  },
+  { name:'장7도',   ratio:'15/8',  just:1088.27,eq:1100,  pyth:1109.78,rank:10 },
+  { name:'단2도',   ratio:'16/15', just:111.73, eq:100,   pyth:90.22,  rank:11 },
+  { name:'증4도',   ratio:'45/32', just:590.22, eq:600,   pyth:611.73, rank:12 },
+];
+
+function hcls(e){ return Math.abs(e)<2.5?'hc-perfect':Math.abs(e)<16?'hc-near':'hc-rough'; }
+function hsym(e){ return Math.abs(e)<2.5?'✓':Math.abs(e)<16?'△':'✗'; }
+function herr(v){ return v===0?'0¢':`${v>0?'+':''}${v.toFixed(1)}¢`; }
+
+function renderHarmonyTable(sys) {
+  const head = document.getElementById('harmonyHead');
+  const body = document.getElementById('harmonyBody');
+  head.innerHTML = ''; body.innerHTML = '';
+
+  // Header
+  const hr = head.insertRow();
+  const cols = sys==='just'
+    ? ['순위','음정','정수비','음정값 (¢)','협화도']
+    : ['순위','음정','정수비','음정값 (¢)','협화도','순정율 대비 오차'];
+  cols.forEach((t, i) => {
+    const th = document.createElement('th');
+    th.textContent = t;
+    if(i===1) th.className='tl';
+    hr.appendChild(th);
+  });
+
+  // Rows
+  INTERVALS.forEach(iv => {
+    const val = sys==='just'?iv.just : sys==='eq'?iv.eq : iv.pyth;
+    const err = val - iv.just;
+    const isJust = sys==='just';
+    const tr = body.insertRow();
+
+    // 순위
+    const c0=tr.insertCell(); c0.textContent=`#${iv.rank}`;
+    c0.style.cssText='font-family:JetBrains Mono,monospace;font-size:.72rem;font-weight:700;color:var(--faint);text-align:center;';
+
+    // 음정명
+    const c1=tr.insertCell(); c1.className='tl';
+    c1.style.cssText='font-family:Libre Baskerville,serif;font-size:.82rem;font-weight:700;';
+    c1.textContent=iv.name;
+
+    // 비율
+    const c2=tr.insertCell();
+    c2.style.cssText='font-family:JetBrains Mono,monospace;font-size:.68rem;color:var(--muted);';
+    c2.textContent=iv.ratio;
+
+    // 음정값
+    const c3=tr.insertCell();
+    c3.className = isJust?'hc-perfect':hcls(err);
+    c3.style.cssText='font-family:JetBrains Mono,monospace;font-size:.72rem;';
+    c3.textContent=`${val.toFixed(2)}¢`;
+
+    // 협화도 기호
+    const c4=tr.insertCell();
+    c4.className = isJust?'hc-perfect':hcls(err);
+    c4.style.cssText='font-family:JetBrains Mono,monospace;font-size:.72rem;text-align:center;';
+    c4.textContent = isJust ? '✓ 완벽' : `${hsym(err)}`;
+
+    // 오차 바 (순정율 탭 제외)
+    if (!isJust) {
+      const c5=tr.insertCell();
+      c5.className=hcls(err);
+      const pct=Math.min(Math.abs(err)/25*50,50);
+      const isPos=err>=0;
+      const bc=Math.abs(err)<2.5?'var(--good)':Math.abs(err)<16?'var(--warn)':'var(--bad)';
+      c5.innerHTML=`<div class="bt" style="width:80px;margin:0 auto">
+        <div class="bz"></div>
+        <div class="bf" style="${isPos?'left:50%':'right:50%'};width:${pct}%;background:${bc};opacity:.9"></div>
+      </div><div class="bv">${herr(err)}</div>`;
+    }
+  });
+}
+
+function buildHarmonyTable() {
+  renderHarmonyTable('just');
+  document.querySelectorAll('.htab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.htab').forEach(b=>b.classList.remove('on'));
+      btn.classList.add('on');
+      renderHarmonyTable(btn.dataset.sys);
+    });
+  });
+}
+
+// ═══════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════
+function render(){
+  stopAll(); clearAllT(); resetUI();
+  buildBtns('keyBtns',
+    ALL_KEYS.map(k=>({val:k.semi,label:k.name})),
+    ()=>currentKey,
+    v=>{currentKey=v;},
+    item=>item.label
+  );
+  buildBtns('progBtns',
+    Object.keys(PROGS).map(k=>({val:k,label:PROG_LABELS[k].join('–')})),
+    ()=>currentProg,
+    v=>{currentProg=v;},
+    item=>item.label
+  );
+  // Base key selector (always C for now — just educational label)
+  document.getElementById('baseKeyBtns').innerHTML=
+    '<span style="font-family:JetBrains Mono,monospace;font-size:.72rem;padding:.22rem .62rem;border:1.5px solid #8a2600;border-radius:2px;color:#8a2600;background:#fff;">C</span>';
+
+  updateCardNames();
+  buildChordStrip();
+  buildDevTable();
+  buildHarmonyTable();
+  drawKeyboard();
+  updateExplainer();
+  updateWaves(PROGS[currentProg][0]);
+}
+
+window.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('cardJ').addEventListener('click',()=>playSystem('J'));
+  document.getElementById('cardKB').addEventListener('click',()=>playSystem('KB'));
+  document.getElementById('cardP').addEventListener('click',()=>playSystem('P'));
+  document.getElementById('cardE').addEventListener('click',()=>playSystem('E'));
+
+  document.getElementById('btnSimPlay').addEventListener('click',()=>{
+    const sysA=document.getElementById('cmpSelA').value;
+    const sysB=document.getElementById('cmpSelB').value;
+    playSim(sysA,sysB,'btnSimPlay');
+  });
+
+  document.getElementById('btnStop').addEventListener('click',()=>{stopAll();clearAllT();resetUI();});
+  render();
+});
+</script>
+</body>
+</html>

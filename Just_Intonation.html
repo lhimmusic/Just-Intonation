@@ -325,6 +325,15 @@ canvas.wave{
 .two-col{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;width:100%;max-width:700px;}
 @media(max-width:580px){.two-col{grid-template-columns:1fr;}}
 </style>
+<script>
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('keydown', e => {
+  if(e.key==='F12') e.preventDefault();
+  if(e.ctrlKey && e.shiftKey && ['I','J','C'].includes(e.key.toUpperCase())) e.preventDefault();
+  if(e.ctrlKey && e.key.toUpperCase()==='U') e.preventDefault();
+  if(e.ctrlKey && e.key.toUpperCase()==='S') e.preventDefault();
+});
+</script>
 </head>
 <body>
 
